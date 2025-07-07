@@ -136,3 +136,87 @@ python main.py --mode api
 ---
 
 欢迎 Star、Fork 和 PR！
+
+## 🐳 Docker 部署指南
+
+### 方式一：使用环境变量（推荐）
+
+1. **创建环境配置文件**：
+```bash
+# 复制示例配置文件
+cp .env.example .env
+
+# 编辑配置文件，填入您的网易云Cookie
+nano .env
+```
+
+2. **获取网易云Cookie**：
+   - 登录 [网易云音乐网页版](https://music.163.com)
+   - 按F12打开开发者工具
+   - 切换到Network（网络）选项卡
+   - 刷新页面或进行任意操作
+   - 找到任意请求，复制完整的Cookie值
+
+3. **启动服务**：
+```bash
+# 使用docker-compose启动
+docker-compose up -d
+
+# 或使用docker run直接启动
+docker run -d \
+  --name netease-music \
+  -p 5000:5000 \
+  -e NETEASE_COOKIE="你的完整cookie字符串" \
+  -e LEVEL=lossless \
+  -e MODE=api \
+  netease-url
+```
+
+### 方式二：使用cookie.txt文件
+
+```bash
+# 将cookie写入文件
+echo "你的cookie字符串" > cookie.txt
+
+# 启动容器并挂载文件
+docker run -d \
+  --name netease-music \
+  -p 5000:5000 \
+  -v $(pwd)/cookie.txt:/app/cookie.txt:ro \
+  netease-url
+```
+
+### 环境变量说明
+
+| 环境变量 | 必需 | 默认值 | 说明 |
+|---------|-----|--------|------|
+| `NETEASE_COOKIE` | 是 | - | 网易云音乐Cookie |
+| `LEVEL` | 否 | lossless | 音质设置 |
+| `MODE` | 否 | api | 运行模式 |
+| `URL` | 否 | - | 启动时处理的URL |
+| `TZ` | 否 | Asia/Shanghai | 时区设置 |
+
+### 音质选项
+
+- `standard`: 标准音质
+- `exhigh`: 极高音质  
+- `lossless`: 无损音质（推荐）
+- `hires`: Hires音质
+- `sky`: 沉浸环绕声
+- `jyeffect`: 高清环绕声
+- `jymaster`: 超清母带
+
+### 验证部署
+
+访问 `http://localhost:5000` 查看Web界面，或测试API接口：
+
+```bash
+# 测试API
+curl "http://localhost:5000/Song_V1?ids=音乐ID&level=lossless&type=json"
+```
+
+### 安全建议
+
+1. **生产环境**：使用Docker Secrets或专用的密钥管理服务
+2. **网络安全**：仅在内网环境部署，或配置反向代理
+3. **定期更新**：及时更新Cookie以确保服务正常运行
